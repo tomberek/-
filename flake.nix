@@ -36,8 +36,20 @@
           let
             gen = name: paths: self.buildEnv {
               inherit name;
-              paths = [
-                (super.python3.withPackages (ps: paths))
+              paths = 
+              let custom = {buildEnv,pythonPackages}:
+              f: let packages = f pythonPackages; in buildEnv.override { extraLibs = packages; makeWrapperArgs = [
+                "--set" "PIP_PREFIX" "/root/_build"
+                "--set" "PYTHONPATH" "/root/_build/lib/python3.9/site-packages"
+                "--prefix" "PATH" ":" "/root/_build/bin"
+              ];};
+              in
+                [
+                  (custom {
+                    buildEnv=super.python3.buildEnv;
+                    pythonPackages=super.python3.packages;
+                  }
+                   (ps: paths))
               ];
               ignoreCollisions = true;
               meta.mainProgram = let
