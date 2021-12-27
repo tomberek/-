@@ -31,11 +31,31 @@
                 ) super;
             };
           in gen "merged" [ ];
+
+        python3With =
+          let
+            gen = name: paths: self.buildEnv {
+              inherit name;
+              paths = [
+                (super.python3.withPackages (ps: paths))
+              ];
+              ignoreCollisions = true;
+              meta.mainProgram = let
+                last = self.lib.last paths; in last.meta.mainProgram
+                or (builtins.parseDrvName last.name).name;
+
+              # Use lists not attrsets because order matters
+              passthru = with builtins; mapAttrs (n: v: gen
+                  (if length paths > 5 then "merged-environment" else "${name}-${n}")
+                  (paths ++ [ v ])
+                ) super.python3Packages;
+            };
+          in gen "merged" [ ];
       };
 
       legacyPackages = forAllSystems (system: nixpkgsFor.${system});
       packages = forAllSystems (system: { inherit (nixpkgsFor.${system})
-        pkgsMerge "+" "-"; });
+        pkgsMerge "+" "-" python3With ;});
 
       defaultPackage = forAllSystems (system: self.packages."${system}".pkgsMerge);
     };
