@@ -11,66 +11,37 @@
       forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
       nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system;
           overlays = [ self.overlay ]; });
+
+      makeMerger = self: packageset: packagesetfunc:
+          let
+            gen = name: paths: self.buildEnv {
+              inherit name;
+              paths = [
+                (packagesetfunc (ps: paths))
+              ];
+              ignoreCollisions = true;
+              meta.mainProgram = let
+                last = self.lib.last paths; in last.meta.mainProgram
+                or (builtins.parseDrvName last.name).name;
+
+              # Use lists not attrsets because order matters
+              passthru = with builtins; mapAttrs (n: v: gen
+                  (if length paths > 5 then "merged-environment" else "${name}-${n}")
+                  (paths ++ [ v ])
+                ) packageset;
+            };
+          in gen "merged" [ ];
     in {
       overlay = self: super: {
         "-" = self.pkgsMerge;
         "+" = self.pkgsMerge;
-        pkgsMerge =
-          let
-            gen = name: paths: self.buildEnv {
-              inherit name paths;
-              ignoreCollisions = true;
-              meta.mainProgram = let
-                last = self.lib.last paths; in last.meta.mainProgram
-                or (builtins.parseDrvName last.name).name;
-
-              # Use lists not attrsets because order matters
-              passthru = with builtins; mapAttrs (n: v: gen
-                  (if length paths > 5 then "merged-environment" else "${name}-${n}")
-                  (paths ++ [ v ])
-                ) super;
-            };
-          in gen "merged" [ ];
-
-        python3With =
-          let
-            gen = name: paths: self.buildEnv {
-              inherit name;
-              paths = [
-                (super.python3.withPackages (ps: paths))
-              ];
-              ignoreCollisions = true;
-              meta.mainProgram = let
-                last = self.lib.last paths; in last.meta.mainProgram
-                or (builtins.parseDrvName last.name).name;
-
-              # Use lists not attrsets because order matters
-              passthru = with builtins; mapAttrs (n: v: gen
-                  (if length paths > 5 then "merged-environment" else "${name}-${n}")
-                  (paths ++ [ v ])
-                ) super.python3Packages;
-            };
-          in gen "merged" [ ];
-
-        perlWith =
-          let
-            gen = name: paths: self.buildEnv {
-              inherit name;
-              paths = [
-                (super.perl.withPackages (ps: paths))
-              ];
-              ignoreCollisions = true;
-              meta.mainProgram = let
-                last = self.lib.last paths; in last.meta.mainProgram
-                or (builtins.parseDrvName last.name).name;
-
-              # Use lists not attrsets because order matters
-              passthru = with builtins; mapAttrs (n: v: gen
-                  (if length paths > 5 then "merged-environment" else "${name}-${n}")
-                  (paths ++ [ v ])
-                ) super.perlPackages;
-            };
-          in gen "merged" [ ];
+        pkgsMerge = makeMerger self super (paths: paths {});
+        python2With = makeMerger self super.python2Packages super.python2.withPackages;
+        python3With = makeMerger self super.python3Packages super.python3.withPackages;
+        python39With = makeMerger self super.python39Packages super.python39.withPackages;
+        python310With = makeMerger self super.python310Packages super.python310.withPackages;
+        haskellWith = makeMerger self super.haskellPackages super.haskellPackages.ghcWithPackages;
+        perlWith = makeMerger self super.perlPackages super.perl.withPackages;
       };
 
       legacyPackages = forAllSystems (system: nixpkgsFor.${system});
