@@ -18,7 +18,7 @@
               inherit name;
               paths = [
                 (packagesetfunc (ps: paths))
-              ];
+              ] ++ paths ;
               ignoreCollisions = true;
               meta.mainProgram = let
                 last = self.lib.last paths; in last.meta.mainProgram
@@ -28,7 +28,7 @@
               passthru = with builtins; mapAttrs (n: v: gen
                   (if length paths > 5 then "merged-environment" else "${name}-${n}")
                   (paths ++ [ v ])
-                ) packageset;
+                ) (self // packageset);
             };
           in gen "merged" [ ];
     in {
