@@ -13,16 +13,34 @@ nix shell <PATH>#<LANGUAGE>[.<PKG1>.<PKG2> ...]
 - `LANGUAGE` is the name of the language (see [Supported Languages](#supported-languages))
 - `PKGS` are the package names (separated by `.`) that will be included with the language
 
+
+### Make the `<PATH>` shorter
+
+To avoid having to write `github:tomberek/-` each time (which can be quite verbose),
+you can run this command in your shell:
+```sh
+nix registry add flake:lang github:tomberek/-
+```
+> PS: you can change the registry name to anything you like, `lang` is just an example :)
+
+After, you only have to prefix `lang` as the `<PATH>` of the command.
+
 ### Examples
 
 Start a shell environment with python and the packages `scipy`, `matplotlib`, and `numpy`:
 ```sh
 nix shell github:tomberek/-#python3With.scipy.matplotlib.numpy
+
+# If you added the registry
+nix shell lang#python3With.scipy.matplotlib.numpy
 ```
 
 Start a shell environment with perl and the packages `HTMLTokeParserSimple` and `LWP`:
 ```sh
 nix shell github:tomberek/-#perlWith.HTMLTokeParserSimple.LWP
+
+# If you added the registry
+nix shell lang#perlWith.HTMLTokeParserSimple.LWP
 ```
 
 
