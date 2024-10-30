@@ -49,5 +49,8 @@ See the [documentation](https://nixos.org/manual/nix/stable/command-ref/new-cli/
 - Python3 (`python3With`)
 - Python39 (`python39With`)
 - Python310 (`python310With`)
+- Python311 (`python311With`)
+- Python312 (`python312With`)
+- Python313 (`python313With`)
 - Haskell (`haskellWith`)
 - Perl (`perlWith`)
