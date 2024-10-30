@@ -40,8 +40,8 @@
         in
         gen "merged" [ ];
 
-      addLanguage = { lang, langPackages ? lang + "Packages", withPackages ? "withPackages", langWith ? lang + "With" }: {
-        inherit lang langPackages withPackages langWith;
+      addLanguage = { lang, langRepo ? lang, langPackages ? lang + "Packages", withPackages ? "withPackages", langWith ? lang + "With" }: {
+        inherit lang langPackages withPackages langWith langRepo;
       };
 
       languages = [
@@ -52,10 +52,10 @@
         (addLanguage { lang = "python312"; })
         (addLanguage { lang = "python313"; })
         (addLanguage { lang = "perl"; })
-        (addLanguage { lang = "haskel"; withPackages = "ghcWithPackages"; })
+        (addLanguage { lang = "haskell"; langRepo = "haskellPackages"; withPackages = "ghcWithPackages"; })
       ];
 
-      mergeLang = self: super: lang: makeMerger self super.${lang.langPackages} super.${lang.lang}.${lang.withPackages};
+      mergeLang = self: super: lang: makeMerger self super.${lang.langPackages} super.${lang.langRepo}.${lang.withPackages};
     in
     {
       overlays.default = final: prev:
